@@ -79,6 +79,12 @@ cl::opt<std::string> OutDirectory(
     cl::desc("Output directory where Ftargets.txt, Fnames.txt, and BBnames.txt are generated."),
     cl::value_desc("outdir"));
 
+cl::opt<std::string> CriticalFile(
+  "critical",
+  cl::desc("Critical file containing the critical lines of code."),
+  cl::value_desc("critical")
+);
+
 namespace llvm {
 
 template<>
@@ -191,6 +197,8 @@ bool AFLCoverage::runOnModule(Module &M) {
   std::list<std::string> targets;
   std::map<std::string, int> bb_to_dis;
   std::vector<std::string> basic_blocks;
+  std::map<std::string, int> bb_to_critical;
+  std::vector<std::string> critical_basic_blocks;
 
   if (!TargetsFile.empty()) {
 
@@ -210,9 +218,14 @@ bool AFLCoverage::runOnModule(Module &M) {
   } else if (!DistanceFile.empty()) {
 
     std::ifstream cf(DistanceFile);
-    if (cf.is_open()) {
+
+    //新建关键基本块输入
+    std::ifstream criticalfile(CriticalFile);
+
+    if (cf.is_open() && criticalfile.is_open()) {
 
       std::string line;
+      std::string cline;
       while (getline(cf, line)) {
 
         std::size_t pos = line.find(",");
@@ -223,12 +236,20 @@ bool AFLCoverage::runOnModule(Module &M) {
         basic_blocks.push_back(bb_name);
 
       }
+      while (getline(criticalfile, cline)){
+        std::size_t c_pos = cline.find(",");
+        std::string critical_bb_name = cline.substr(0, c_pos);
+
+        bb_to_critical.emplace(critical_bb_name, 100);
+        critical_basic_blocks.push_back(critical_bb_name);
+      }
       cf.close();
+      criticalfile.close();
 
       is_aflgo = true;
 
     } else {
-      FATAL("Unable to find %s.", DistanceFile.c_str());
+      FATAL("Unable to find %s or %s.", DistanceFile.c_str(), CriticalFile.c_str());
       return false;
     }
 
@@ -423,6 +444,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 #endif
     ConstantInt *MapDistLoc = ConstantInt::get(LargestType, MAP_SIZE);
     ConstantInt *One = ConstantInt::get(LargestType, 1);
+    ConstantInt *MapCriLoc = ConstantInt::get(LargestType, MAP_SIZE);
 
     /* Get globals for the SHM region and the previous location. Note that
        __afl_prev_loc is thread-local. */
@@ -438,10 +460,12 @@ bool AFLCoverage::runOnModule(Module &M) {
     for (auto &F : M) {
 
       int distance = -1;
+      int critical_flag = -1;
 
       for (auto &BB : F) {
 
         distance = -1;
+        critical_flag = -1;
 
         if (is_aflgo) {
 
@@ -473,12 +497,21 @@ bool AFLCoverage::runOnModule(Module &M) {
               /* Find distance for BB */
 
               if (AFL_R(100) < dinst_ratio) {
+                
                 std::map<std::string,int>::iterator it;
                 for (it = bb_to_dis.begin(); it != bb_to_dis.end(); ++it)
                   if (it->first.compare(bb_name) == 0)
                     distance = it->second;
 
               }
+            }
+
+            if (find(critical_basic_blocks.begin(), critical_basic_blocks.end(), bb_name) != critical_basic_blocks.end()) {
+              std::map<std::string, int>::iterator c_it;            //读取有效基本块
+              for(c_it = bb_to_critical.begin(); c_it != bb_to_critical.end(); ++c_it)
+                if (c_it->first.compare(bb_name) == 0)
+                  critical_flag = c_it ->second;
+                  c_it -> second = -1;
             }
           }
         }
@@ -548,6 +581,18 @@ bool AFLCoverage::runOnModule(Module &M) {
           IRB.CreateStore(IncrCnt, MapCntPtr)
               ->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 
+        }
+
+        if (critical_flag >= 0) {
+          ConstantInt *Critical_flag_byte = ConstantInt::get(LargestType, (unsigned) critical_flag);
+
+          //新增关键基本块插桩
+          Value *MapCriPtr = IRB.CreateBitCast(IRB.CreateGEP(MapPtr, MapCriLoc), LargestType->getPointerTo());
+          LoadInst *MapCri = IRB.CreateLoad(MapCriLoc);
+          MapCri -> setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
+
+          Value *IncrCri = IRB.CreateAdd(MapCri, One);
+          IRB.CreateStore(IncrCri, MapCriPtr)->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
         }
 
         inst_blocks++;
