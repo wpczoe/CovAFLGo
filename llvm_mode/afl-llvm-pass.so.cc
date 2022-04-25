@@ -510,10 +510,12 @@ bool AFLCoverage::runOnModule(Module &M) {
 
             if (find(critical_basic_blocks.begin(), critical_basic_blocks.end(), bb_name) != critical_basic_blocks.end()) {
               std::map<std::string, int>::iterator c_it;            //读取有效基本块
-              for(c_it = bb_to_critical.begin(); c_it != bb_to_critical.end(); ++c_it)
-                if (c_it->first.compare(bb_name) == 0)
+              for(c_it = bb_to_critical.begin(); c_it != bb_to_critical.end(); ++c_it){
+                if (c_it->first.compare(bb_name) == 0){
                   critical_flag = c_it ->second;
                   c_it -> second = -1;
+                }
+              }
             }
           }
         }
