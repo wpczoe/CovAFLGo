@@ -438,13 +438,15 @@ bool AFLCoverage::runOnModule(Module &M) {
 #ifdef __x86_64__
     IntegerType *LargestType = Int64Ty;
     ConstantInt *MapCntLoc = ConstantInt::get(LargestType, MAP_SIZE + 8);
+    ConstantInt *MapCriLoc = ConstantInt::get(LargestType, MAP_SIZE + 16);
 #else
     IntegerType *LargestType = Int32Ty;
     ConstantInt *MapCntLoc = ConstantInt::get(LargestType, MAP_SIZE + 4);
+    ConstantInt *MapCriLoc = ConstantInt::get(LargestType, MAP_SIZE + 8);
 #endif
     ConstantInt *MapDistLoc = ConstantInt::get(LargestType, MAP_SIZE);
     ConstantInt *One = ConstantInt::get(LargestType, 1);
-    ConstantInt *MapCriLoc = ConstantInt::get(LargestType, MAP_SIZE);
+    
 
     /* Get globals for the SHM region and the previous location. Note that
        __afl_prev_loc is thread-local. */
