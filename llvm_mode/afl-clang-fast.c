@@ -142,7 +142,8 @@ static void edit_params(u32 argc, char** argv) {
 
     if (!strncmp(cur, "-distance", 9)
         || !strncmp(cur, "-targets", 8)
-        || !strncmp(cur, "-outdir", 7))
+        || !strncmp(cur, "-outdir", 7)
+        || !strncmp(cur, "-critical", 9))
       cc_params[cc_par_cnt++] = "-mllvm";
 
     if (!strcmp(cur, "-m32")) bit_mode = 32;
