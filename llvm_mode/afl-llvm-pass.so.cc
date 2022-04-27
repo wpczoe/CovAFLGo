@@ -592,7 +592,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 
           //新增关键基本块插桩
           Value *MapCriPtr = IRB.CreateBitCast(IRB.CreateGEP(MapPtr, MapCriLoc), LargestType->getPointerTo());
-          LoadInst *MapCri = IRB.CreateLoad(MapCriLoc);
+          LoadInst *MapCri = IRB.CreateLoad(MapCriPtr);
           MapCri -> setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 
           Value *IncrCri = IRB.CreateAdd(MapCri, One);
