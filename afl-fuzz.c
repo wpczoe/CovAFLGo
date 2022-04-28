@@ -21,7 +21,7 @@
  */
 
 #define AFL_MAIN
-#define MESSAGES_TO_STDOUT
+//#define MESSAGES_TO_STDOUT
 
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -57,8 +57,6 @@
 #include <sys/file.h>
 
 #include <math.h>
-FILE * logfile;
-logfile = fopen ("log.txt","w+");
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined (__OpenBSD__)
 #  include <sys/sysctl.h>
@@ -4900,8 +4898,8 @@ static u32 calculate_score(struct queue_entry* q) {
   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
 
   /* AFLGO-DEBUGGING */
-  //fprintf(stderr, "[Time %llu] q->distance: %4lf,q->critical: %4lf , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
-  fprintf(logfile, "[Time %llu] q->distance: %4lf,q->critical: %4lf , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
+  fprintf(stderr, "[Time %llu] q->distance: %4lf,q->critical: %4lf , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
+  //fprintf(logfile, "[Time %llu] q->distance: %4lf,q->critical: %4lf , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
   return perf_score;
 
 }
@@ -7879,6 +7877,10 @@ int stricmp(char const *a, char const *b) {
 /* Main entry point */
 
 int main(int argc, char** argv) {
+
+  //FILE * logfile;
+  //logfile = fopen ("log.txt","w+");
+  //fprintf("");
 
   s32 opt;
   u64 prev_queued = 0;
