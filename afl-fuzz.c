@@ -21,7 +21,7 @@
  */
 
 #define AFL_MAIN
-//#define MESSAGES_TO_STDOUT
+#define MESSAGES_TO_STDOUT
 
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -7881,7 +7881,7 @@ int main(int argc, char** argv) {
   //FILE * logfile;
   //logfile = fopen ("log.txt","w+");
   //fprintf("");
-
+  fprintf(stderr,"------------------stderr----------------------");
   s32 opt;
   u64 prev_queued = 0;
   u32 sync_interval_cnt = 0, seek_to;
