@@ -4898,7 +4898,7 @@ static u32 calculate_score(struct queue_entry* q) {
   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
 
   /* AFLGO-DEBUGGING */
-  fprintf(stderr, "[Time %llu] q->distance: %4lf,q->critical: %4lf , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
+  fprintf(stderr, "[Time %llu] q->distance: %4lf,q->critical: %4d , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
   //fprintf(logfile, "[Time %llu] q->distance: %4lf,q->critical: %4lf , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
   return perf_score;
 
