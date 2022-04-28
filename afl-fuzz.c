@@ -57,6 +57,8 @@
 #include <sys/file.h>
 
 #include <math.h>
+FILE * logfile;
+logfile = fopen ("log.txt","w+");
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined (__OpenBSD__)
 #  include <sys/sysctl.h>
@@ -259,6 +261,8 @@ struct queue_entry {
 
   double distance;                    /* Distance to targets              */
 
+  int critical;                       /* Critical BB count                */
+
   struct queue_entry *next,           /* Next element, if any             */
                      *next_100;       /* 100 elements ahead               */
 
@@ -288,6 +292,8 @@ static double cur_distance = -1.0;     /* Distance of executed input       */
 static double max_distance = -1.0;     /* Maximal distance for any input   */
 static double min_distance = -1.0;     /* Minimal distance for any input   */
 static u32 t_x = 10;                  /* Time to exploitation (Default: 10 min) */
+
+static int cur_critical = -1;
 
 static u8* (*post_handler)(u8* buf, u32* len);
 
@@ -811,6 +817,8 @@ static void add_to_queue(u8* fname, u32 len, u8 passed_det) {
 
   }
 
+  q->critical = cur_critical;
+
   if (q->depth > max_depth) max_depth = q->depth;
 
   if (queue_top) {
@@ -922,6 +930,14 @@ static inline u8 has_new_bits(u8* virgin_map) {
   else
     cur_distance = -1.0;
 
+  //gain critical byte
+  u64* critical_byte = (u64*) (trace_bits + MAP_SIZE + 16);
+  
+  if (*critical_byte > 0)
+    cur_critical = critical_byte;
+  else
+    cur_critical = -1;
+
 #else
 
   u32* current = (u32*)trace_bits;
@@ -937,6 +953,13 @@ static inline u8 has_new_bits(u8* virgin_map) {
     cur_distance = (double) (*total_distance) / (double) (*total_count);
   else
     cur_distance = -1.0;
+
+  u32* critical_byte = (u32*) (trace_bits + MAP_SIZE + 8);
+  
+  if (*critical_byte > 0)
+    cur_critical = critical_byte;
+  else
+    cur_critical = -1;
 
 #endif /* ^__x86_64__ */
 
@@ -2320,7 +2343,7 @@ static u8 run_target(char** argv, u32 timeout) {
      must prevent any earlier operations from venturing into that
      territory. */
 
-  memset(trace_bits, 0, MAP_SIZE + 16);
+  memset(trace_bits, 0, MAP_SIZE + 24);
   MEM_BARRIER();
 
   /* If we're running in "dumb" mode, we can't rely on the fork server
@@ -2654,6 +2677,13 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
 
       }
 
+    }
+    
+    if (q->critical <= 0) {
+      
+      has_new_bits(virgin_bits);
+
+      q->critical = cur_critical;
     }
 
     if (q->exec_cksum != cksum) {
@@ -4870,8 +4900,8 @@ static u32 calculate_score(struct queue_entry* q) {
   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
 
   /* AFLGO-DEBUGGING */
-  // fprintf(stderr, "[Time %llu] q->distance: %4lf, max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, max_distance, min_distance, T, power_factor, perf_score);
-
+  //fprintf(stderr, "[Time %llu] q->distance: %4lf,q->critical: %4lf , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
+  fprintf(logfile, "[Time %llu] q->distance: %4lf,q->critical: %4lf , max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor: %4.3lf, adjusted perf_score: %4d\n", t, q->distance, q->critical, max_distance, min_distance, T, power_factor, perf_score);
   return perf_score;
 
 }
