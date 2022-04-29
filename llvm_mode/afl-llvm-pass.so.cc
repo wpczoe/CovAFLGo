@@ -244,7 +244,7 @@ bool AFLCoverage::runOnModule(Module &M) {
         critical_basic_blocks.push_back(critical_bb_name);
       }
       for (auto i = bb_to_critical.begin(); i != bb_to_critical.end(); ++i) {
-        SAYF("first:%s   second:%s",i->first.c_str(),i->second.c_str());
+        SAYF("first:%s   second:%d",i->first.c_str(),i->second);
         //cout << i->first << " " << i->second << endl;
       }
 
