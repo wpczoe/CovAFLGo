@@ -304,6 +304,7 @@ bool AFLCoverage::runOnModule(Module &M) {
   /* Instrument all the things! */
 
   int inst_blocks = 0;
+  int cinst_blocks = 0;
 
   if (is_aflgo_preprocessing) {
 
@@ -513,7 +514,7 @@ bool AFLCoverage::runOnModule(Module &M) {
               for(c_it = bb_to_critical.begin(); c_it != bb_to_critical.end(); ++c_it){
                 if (c_it->first.compare(bb_name) == 0){
                   critical_flag = c_it ->second;
-                  c_it -> second = -1;
+                  //c_it -> second = -1;
                 }
               }
             }
@@ -597,6 +598,9 @@ bool AFLCoverage::runOnModule(Module &M) {
 
           Value *IncrCri = IRB.CreateAdd(MapCri, One);
           IRB.CreateStore(IncrCri, MapCriPtr)->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
+          OKF("Critical Instrumented Basicname: %s locations.", bb_name);
+
+          cinst_blocks++;
         }
 
         inst_blocks++;
@@ -617,6 +621,8 @@ bool AFLCoverage::runOnModule(Module &M) {
              : ((getenv("AFL_USE_ASAN") || getenv("AFL_USE_MSAN"))
                ? "ASAN/MSAN" : "non-hardened"),
              inst_ratio, dinst_ratio);
+    if (!cinst_blocks) WARNF("No Critical instrumentation targets.");
+    else OKF("Critical Instrumented %u locations.", cinst_blocks);
 
   }
 
