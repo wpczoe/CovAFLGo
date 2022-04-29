@@ -244,11 +244,13 @@ bool AFLCoverage::runOnModule(Module &M) {
         critical_basic_blocks.push_back(critical_bb_name);
       }
       for (auto i = bb_to_critical.begin(); i != bb_to_critical.end(); ++i) {
-        cout << i->first << " " << i->second << endl;
+        SAYF("first:%s   second:%s",i->first,i->second);
+        //cout << i->first << " " << i->second << endl;
       }
 
       for (int i = 0; i < critical_basic_blocks.size(); i++) {
-        cout << critical_basic_blocks[i] << " ";
+        SAYF("critical_basic_blocks[i]:%s",critical_basic_blocks[i]);
+        //cout << critical_basic_blocks[i] << " ";
       }
       cf.close();
       criticalfile.close();
