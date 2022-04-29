@@ -514,6 +514,7 @@ bool AFLCoverage::runOnModule(Module &M) {
               for(c_it = bb_to_critical.begin(); c_it != bb_to_critical.end(); ++c_it){
                 if (c_it->first.compare(bb_name) == 0){
                   critical_flag = c_it ->second;
+                  OKF("Critical Instrumented Basicname: %s locations.", bb_name);
                   //c_it -> second = -1;
                 }
               }
@@ -598,7 +599,6 @@ bool AFLCoverage::runOnModule(Module &M) {
 
           Value *IncrCri = IRB.CreateAdd(MapCri, One);
           IRB.CreateStore(IncrCri, MapCriPtr)->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
-          OKF("Critical Instrumented Basicname: %s locations.", bb_name);
 
           cinst_blocks++;
         }
